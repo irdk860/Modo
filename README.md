@@ -11,6 +11,7 @@ A free web app for learning music at your own pace: piano, guitar, bass, woodwin
 - Song practice with tempo control and section looping
 - Live tuner and recording analysis (pitch detection)
 - Personalised feedback and recommendations
+- Market research survey (15 questions: audience, needs, existing apps, features, desirability, pricing, improvements) with live results
 - Beta report showing which features are proven, plus a tester questionnaire
 
 ## How it runs
@@ -20,3 +21,8 @@ A free web app for learning music at your own pace: piano, guitar, bass, woodwin
 
 ## Reading tester feedback
 Supabase dashboard → Table Editor → `tester_feedback`, or run `select * from tester_feedback_summary;` in the SQL editor.
+
+## Reading survey results
+- In the app: Survey tab → See results so far (counts only; written comments are never shown publicly). Copy as CSV for charts.
+- Full answers, including comments: Supabase → Table Editor → `market_survey`.
+- Free Supabase projects pause after about a week with no visitors; restore from the dashboard if the app says the server can't be reached.

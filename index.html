@@ -144,6 +144,38 @@ main{max-width:1140px;margin:0 auto;padding-block:24px 64px}
 .dp.good{background:var(--good);color:#fff}.dp.good span{color:#fff}
 .dp.bad{background:var(--bad);color:#fff}.dp.bad span{color:#fff}
 @media (max-width:560px){.dpad{grid-template-columns:repeat(2,minmax(0,1fr))}}
+[hidden]{display:none!important}
+/* survey */
+.svform{display:grid;gap:20px}
+.sq{border:0;margin:0;padding:16px 0 0;display:grid;gap:10px;border-top:1px solid var(--line);min-width:0}
+.eyebrow+.sq{border-top:0;padding-top:0}
+.sq legend{padding:0;margin-bottom:2px;font-weight:700;font-size:1.05rem;display:flex;gap:10px;align-items:baseline}
+.qn{font:600 12px var(--f-mono);color:var(--accent-ink);background:var(--accent-soft);border-radius:6px;padding:2px 6px;min-width:1.9em;text-align:center;flex:none}
+.sq.missing legend{color:var(--bad)}
+.sq-err{color:var(--bad);margin:0}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{position:relative;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer;background:var(--surface);font-size:15px;line-height:1.3}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.opt:has(input:focus-visible){outline:3px solid var(--accent);outline-offset:2px}
+.opt input{accent-color:var(--accent);margin:0;flex:none}
+.nums{gap:6px}
+.nums .opt{min-width:44px;justify-content:center;padding:8px 6px;font-family:var(--f-mono);font-weight:600}
+.nums .opt input{position:absolute;opacity:0;pointer-events:none}
+.scale{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:center;padding-block:8px;border-bottom:1px dashed var(--line)}
+.mrow:last-of-type{border-bottom:0}
+@media (max-width:640px){.mrow{grid-template-columns:minmax(0,1fr)}}
+.svbar{display:flex;align-items:center;gap:12px}
+.svbar .track{flex:1;height:8px;border-radius:99px;background:var(--sunk);overflow:hidden;max-width:320px}
+.svbar .track i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .2s}
+.rq{display:grid;gap:8px;padding-block:16px;border-top:1px solid var(--line)}
+.rq h3{display:flex;gap:10px;align-items:baseline;font-family:var(--f-body);font-weight:700;font-size:1rem}
+.rb{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(70px,1fr) 5.5em;gap:10px;align-items:center;font-size:14px}
+.rt{height:12px;background:var(--sunk);border-radius:99px;overflow:hidden}
+.rt i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.rb .num{text-align:right;color:var(--muted);font-size:13px}
+@media (max-width:520px){.rb{grid-template-columns:minmax(0,1fr) 5.5em;gap:4px 10px}.rb .rl{grid-column:1/-1}}
 /* rhythm */
 .pad{width:100%;min-height:150px;border-radius:16px;border:2px solid var(--line);background:var(--sunk);color:var(--ink);font:800 1.6rem var(--f-display);cursor:pointer;touch-action:manipulation;transition:transform .05s}
 .pad:active,.pad.hit{transform:scale(.985);border-color:var(--accent)}
@@ -236,6 +268,7 @@ textarea{width:100%;min-height:80px;font:inherit;color:var(--ink);background:var
     <a class="tab" data-v="songs" href="#songs">Songs</a>
     <a class="tab" data-v="listen" href="#listen">Listen</a>
     <a class="tab" data-v="feedback" href="#feedback">My feedback</a>
+    <a class="tab" data-v="survey" href="#survey">Survey</a>
     <a class="tab" data-v="report" href="#report">Beta report</a>
   </nav></div>
 </header>
@@ -269,6 +302,7 @@ textarea{width:100%;min-height:80px;font:inherit;color:var(--ink);background:var
       <div id="home-next"></div>
       <div class="eyebrow">Your progress</div>
       <div class="stats" id="home-stats"></div>
+      <a class="rec" href="#survey" style="text-decoration:none;color:inherit"><span class="sev good"></span><b>Help shape Modo</b><span class="small muted">Answer 15 quick questions about how you learn music and what you'd want from Modo.</span></a>
       <p class="notice">This is a beta for testing whether Modo's features work in a browser. <a href="#account">Sign in</a> to keep your progress on any device; otherwise it stays in this browser. The <a href="#report">Beta report</a> tab records what each test proved.</p>
     </div>
   </div>
@@ -411,6 +445,27 @@ textarea{width:100%;min-height:80px;font:inherit;color:var(--ink);background:var
   <div class="grid2">
     <div class="panel"><div class="eyebrow">Recommendations</div><div style="display:grid;gap:10px" id="fb-recs"></div></div>
     <div class="panel"><div class="eyebrow">Recent sessions</div><div class="tbl" id="fb-sessions"></div></div>
+  </div>
+</section>
+
+<!-- SURVEY -->
+<section class="view" id="view-survey" hidden>
+  <div class="panel" id="sv-intro">
+    <div><div class="eyebrow">Market research</div><h2>Help shape Modo</h2></div>
+    <p class="lede">15 questions about how you learn music, the apps you've tried, the features you want and what you'd pay. It takes about 3 minutes.</p>
+    <p class="small muted">The survey is anonymous: it doesn't ask for your name or email. If you're under 13, ask a parent or carer before you fill it in.</p>
+    <div><button class="btn sm" type="button" id="sv-show-res">See results so far</button></div>
+  </div>
+  <form id="sv-form" class="svform" novalidate></form>
+  <div class="panel" id="sv-done" hidden>
+    <div><div class="eyebrow">Survey sent</div><h2>Thanks for helping</h2></div>
+    <p id="sv-done-msg"></p>
+    <div class="row"><button class="btn" type="button" id="sv-another">Fill in another response</button><a class="btn" href="#home">Back to Modo</a></div>
+  </div>
+  <div class="panel" id="sv-results" hidden>
+    <div class="row" style="justify-content:space-between"><div><div class="eyebrow">Survey results</div><h2>What people said</h2></div><div class="row"><button class="btn sm" type="button" id="sv-res-btn">Refresh</button><button class="btn sm" type="button" id="sv-csv">Copy as CSV</button></div></div>
+    <p class="small muted" id="sv-res-sub"></p>
+    <div id="sv-res-body"></div>
   </div>
 </section>
 
@@ -749,11 +804,11 @@ document.addEventListener('keydown',e=>{
 });
 
 /* ---------- router ---------- */
-const VIEWS=['home','lessons','notes','rhythm','songs','listen','feedback','report','account'];
+const VIEWS=['home','lessons','notes','rhythm','songs','listen','feedback','survey','report','account'];
 function route(){const h=location.hash.slice(1);const v=VIEWS.includes(h)?h:'home';current=v;
  $$('.view').forEach(s=>s.hidden=s.id!=='view-'+v);
  $$('.tab').forEach(a=>a.setAttribute('aria-current',a.dataset.v===v?'page':'false'));
- ({home:renderHome,lessons:renderLessons,feedback:renderFeedback,report:renderReport,account:renderAcct}[v]||(()=>{}))();}
+ ({home:renderHome,lessons:renderLessons,feedback:renderFeedback,report:renderReport,account:renderAcct,survey:svShow}[v]||(()=>{}))();}
 function go(v){if(location.hash==='#'+v)route();else location.hash=v;window.scrollTo(0,0);}
 window.addEventListener('hashchange',route);
 
@@ -1066,6 +1121,92 @@ function renderFeedback(){const {rows,example}=hist();
  const sum=r=>r.type==='notes'?`${Math.round(r.acc*100)}% correct`:r.type==='rhythm'?`${r.bpm} BPM · ${r.mae} ms avg. · ${r.bias>0?'late':'early'} ${Math.abs(r.bias)} ms`:r.type==='song'?`${songTitle(r.song)} bars ${r.from}–${r.to} at ${r.tempo}% · ${r.score}%`:r.type==='listen'?`${songTitle(r.song)} · ${Math.round(r.acc*100)}% notes matched`:(LESSONS[r.inst]||[]).find(l=>l.id===r.id)?.title||r.id;
  $('#fb-sessions').innerHTML=`<table><thead><tr><th>Date</th><th>Activity</th><th>Result</th></tr></thead><tbody>${rows.slice(-10).reverse().map(r=>`<tr><td class="num">${new Date(r.at).toLocaleDateString(undefined,{day:'numeric',month:'short'})}</td><td>${lab[r.type]}${r.inst?` · ${INSTR[r.inst].name}`:''}</td><td>${esc(sum(r))}</td></tr>`).join('')}</tbody></table>`;}
 $('#fb-recs').addEventListener('click',e=>{const b=e.target.closest('[data-fb]');if(b)fbRecs[+b.dataset.fb].run();});
+
+/* ---------- SURVEY (market research) ---------- */
+const SURVEY=[
+ {sec:'About you',items:[
+  {id:'age',type:'single',q:'How old are you?',opts:['Under 13','13–17','18–24','25–35','36 or over']},
+  {id:'experience',type:'single',q:'How much experience do you have playing an instrument?',opts:['None yet','Beginner (less than a year)','Intermediate (1–3 years)','Advanced (more than 3 years)']},
+  {id:'instruments',type:'multi',q:'Which instruments do you play, or want to learn?',hint:'Pick all that apply.',opts:['Piano or keyboard','6-string guitar','Bass guitar','Drums or percussion','Woodwind (flute, clarinet, sax)','Brass (trumpet, trombone)','Singing','Other']}]},
+ {sec:'What you need',items:[
+  {id:'goal',type:'single',q:'What is your main reason for using a music learning app?',opts:['Learn an instrument from the beginning','Learn my favourite songs','Improve my technique','Learn another instrument','School, exams or grades','Just for fun']},
+  {id:'barriers',type:'multi',max:3,q:'What makes learning an instrument hardest for you?',hint:'Pick up to 3.',opts:['Lessons cost too much','Not enough time','Not knowing what I\'m doing wrong','Staying motivated','No teacher nearby','Lessons go too fast or too slow','Not knowing what to practise next']}]},
+ {sec:'Apps and lessons you\'ve tried',items:[
+  {id:'used',type:'multi',none:'None of these',q:'Which of these have you used to learn music?',hint:'Pick all that apply.',opts:['Yousician','Simply Piano','JustinGuitar','Flowkey','Ultimate Guitar','YouTube videos','In-person lessons','None of these']},
+  {id:'dislikes',type:'multi',max:3,showIf:A=>(A.used||[]).some(x=>x!=='None of these'),q:'What did you dislike about them?',hint:'Pick up to 3.',opts:['Subscription is too expensive','Too little free content','Only one instrument','Only teaches songs, not skills','Feedback wasn\'t useful','Hard to know what to do next','Adverts','Nothing, I liked them']}]},
+ {sec:'Features',items:[
+  {id:'features',type:'matrix',q:'How important is each feature to you?',hint:'1 = not important, 5 = very important.',rows:['Many instruments in one app','Lessons on the basics (posture, notes, rhythm)','Slowing down and looping hard parts of songs','Feedback on my timing and wrong notes','Tracking my progress','Works in a browser, nothing to download']},
+  {id:'device',type:'single',q:'Which device would you practise with most?',opts:['Phone','Tablet','Laptop or desktop computer']}]},
+ {sec:'Would you use Modo?',items:[
+  {id:'likely',type:'scale',q:'How likely are you to use an app like Modo?',lo:'Very unlikely',hi:'Very likely'},
+  {id:'frequency',type:'single',q:'How often would you practise with it?',opts:['Every day','A few times a week','About once a week','Less than once a week']}]},
+ {sec:'Price',items:[
+  {id:'paid_before',type:'single',q:'Have you paid for music lessons or apps before?',opts:['No','Yes, a one-off payment for an app','Yes, an app subscription','Yes, in-person lessons']},
+  {id:'pricing',type:'single',q:'Modo\'s main lessons will always be free. How should extra features be paid for?',opts:['Keep everything free, supported by donations','Free, with adverts','A one-off payment of £3–£5','A subscription of £2–£4 a month','I wouldn\'t pay for extras']}]},
+ {sec:'Improvements',items:[
+  {id:'priority',type:'single',q:'What should Modo add or improve first?',opts:['More songs, including chart music','More instruments','More realistic instrument sounds','Video lessons','Chord detection for guitar and piano','Posture feedback using the camera','Games and practice challenges','Practising with friends']},
+  {id:'comments',type:'text',optional:true,q:'Anything else you\'d like Modo to do, or do differently?'}]}];
+const SV_ITEMS=SURVEY.flatMap(s=>s.items);
+let svBuilt=false;
+function svOpts(it,nums){const vals=nums?[1,2,3,4,5]:it.opts;return`<div class="opts${nums?' nums':''}">${vals.map((o,i)=>`<label class="opt"><input type="${it.type==='multi'?'checkbox':'radio'}" name="${it.id}" value="${esc(o)}" id="sv-${it.id}-${i}"><span>${esc(o)}</span></label>`).join('')}</div>`;}
+function svItem(it){let body;
+ if(it.type==='single'||it.type==='multi')body=svOpts(it);
+ else if(it.type==='scale')body=`<div class="scale"><span class="small muted">1 · ${esc(it.lo)}</span>${svOpts(it,true)}<span class="small muted">5 · ${esc(it.hi)}</span></div>`;
+ else if(it.type==='matrix')body=it.rows.map((r,ri)=>`<div class="mrow"><span>${esc(r)}</span><div class="opts nums" role="radiogroup" aria-label="${esc(r)}">${[1,2,3,4,5].map(v=>`<label class="opt"><input type="radio" name="${it.id}__${ri}" value="${v}" id="sv-${it.id}-${ri}-${v}"><span>${v}</span></label>`).join('')}</div></div>`).join('');
+ else body=`<textarea id="sv-${it.id}" name="${it.id}" maxlength="1500" aria-label="${esc(it.q)}"></textarea>`;
+ return`<fieldset class="sq" id="sq-${it.id}"><legend><span class="qn"></span><span>${esc(it.q)}${it.optional?' <span class="muted small">(optional)</span>':''}</span></legend>${it.hint?`<p class="small muted">${esc(it.hint)}</p>`:''}${body}<p class="sq-err small" hidden></p></fieldset>`;}
+function svBuild(){$('#sv-form').innerHTML=SURVEY.map(s=>`<div class="panel"><div class="eyebrow">${esc(s.sec)}</div>${s.items.map(svItem).join('')}</div>`).join('')+
+ `<div class="panel"><div class="svbar"><span class="small muted num" id="sv-count"></span><span class="track"><i id="sv-fill"></i></span></div><div class="row"><button class="btn accent" type="submit" id="sv-submit">Send my answers</button><span class="small" id="sv-msg" aria-live="polite"></span></div></div>`;
+ svBuilt=true;svApply();}
+function svRead(){const f=$('#sv-form'),A={};SV_ITEMS.forEach(it=>{
+ if(it.type==='single')A[it.id]=f.querySelector(`input[name="${it.id}"]:checked`)?.value;
+ else if(it.type==='scale'){const v=f.querySelector(`input[name="${it.id}"]:checked`);A[it.id]=v?+v.value:undefined;}
+ else if(it.type==='multi')A[it.id]=$$(`input[name="${it.id}"]:checked`,f).map(i=>i.value);
+ else if(it.type==='matrix'){const o={};it.rows.forEach((r,ri)=>{const v=f.querySelector(`input[name="${it.id}__${ri}"]:checked`);if(v)o[r]=+v.value;});A[it.id]=o;}
+ else A[it.id]=($('#sv-'+it.id).value||'').trim();});return A;}
+const svShown=(it,A)=>!it.showIf||it.showIf(A);
+function svDone(it,A){const v=A[it.id];if(it.type==='multi')return v.length>0;if(it.type==='matrix')return Object.keys(v).length===it.rows.length;if(it.type==='text')return !!v;return v!=null;}
+function svApply(){const A=svRead();let n=0,req=0,ans=0;
+ SV_ITEMS.forEach(it=>{const fs=$('#sq-'+it.id),show=svShown(it,A);fs.hidden=!show;if(!show)return;n++;fs.querySelector('.qn').textContent=n;
+  if(!it.optional){req++;if(svDone(it,A)){ans++;fs.classList.remove('missing');fs.querySelector('.sq-err').hidden=true;}}});
+ $('#sv-count').textContent=`${ans} of ${req} answered`;if(ans===req&&$('#sv-msg'))$('#sv-msg').textContent='';$('#sv-fill').style.width=(req?ans/req*100:0)+'%';return A;}
+$('#sv-form').addEventListener('change',e=>{const i=e.target;if(i.type==='checkbox'){const it=SV_ITEMS.find(x=>x.id===i.name);
+  if(it.none&&i.checked){$$(`input[name="${it.id}"]`).forEach(x=>{if(x!==i&&(i.value===it.none||x.value===it.none))x.checked=false;});}
+  if(it.max&&$$(`input[name="${it.id}"]:checked`).length>it.max){i.checked=false;const er=$('#sq-'+it.id+' .sq-err');er.textContent=`Pick up to ${it.max}. Untick one to choose another.`;er.hidden=false;return;}}
+ svApply();});
+$('#sv-form').addEventListener('input',e=>{if(e.target.tagName==='TEXTAREA')svApply();});
+$('#sv-form').addEventListener('submit',async e=>{e.preventDefault();const A=svApply();let first=null;
+ SV_ITEMS.forEach(it=>{if(it.optional||!svShown(it,A)||svDone(it,A))return;const fs=$('#sq-'+it.id),er=fs.querySelector('.sq-err');fs.classList.add('missing');er.textContent=it.type==='matrix'?'Rate every feature from 1 to 5.':'Please answer this question.';er.hidden=false;if(!first)first=fs;});
+ if(first){$('#sv-msg').textContent='A few questions still need an answer.';first.scrollIntoView({behavior:'smooth',block:'center'});first.querySelector('input,textarea')?.focus({preventScroll:true});return;}
+ const out={};SV_ITEMS.forEach(it=>{if(svShown(it,A)&&!(it.type==='text'&&!A[it.id]))out[it.id]=A[it.id];});
+ const b=$('#sv-submit');b.disabled=true;$('#sv-msg').textContent='Sending…';let sent=false;
+ if(sb){try{const{error}=await sb.from('market_survey').insert({answers:out,source:user?'web-signed-in':'web'});sent=!error;if(sent)cloudOk=true;}catch(err){}}
+ S.surveys=S.surveys||[];S.surveys.push({at:Date.now(),answers:out,sent});save();b.disabled=false;$('#sv-msg').textContent='';
+ $('#sv-form').hidden=true;$('#sv-intro').hidden=true;$('#sv-done').hidden=false;
+ $('#sv-done-msg').textContent=sent?'Your answers have been sent to the Modo team. Thank you!':'Your answers are saved on this device, but the Modo server couldn\'t be reached. Open Modo from its website to send them online.';
+ window.scrollTo(0,0);svResults();});
+$('#sv-another').addEventListener('click',()=>{$('#sv-form').reset();$$('.sq').forEach(f=>f.classList.remove('missing'));$$('.sq-err').forEach(x=>x.hidden=true);svApply();$('#sv-form').hidden=false;$('#sv-intro').hidden=false;$('#sv-done').hidden=true;$('#sv-results').hidden=true;window.scrollTo(0,0);});
+function svLocalRows(){const c={},list=(S.surveys||[]).map(s=>s.answers),inc=(q,a)=>{const k=q+'\u0000'+a;c[k]=(c[k]||0)+1;};
+ list.forEach(A=>Object.entries(A).forEach(([q,v])=>{if(q==='comments')return;if(Array.isArray(v))v.forEach(x=>inc(q,x));else if(v&&typeof v==='object')Object.entries(v).forEach(([r,n])=>inc(q,r+'='+n));else inc(q,String(v));}));
+ return[...Object.entries(c).map(([k,n])=>{const[q,a]=k.split('\u0000');return{question:q,answer:a,responses:n};}),{question:'_total',answer:'all',responses:list.length}];}
+let svRows=[];
+async function svResults(){const box=$('#sv-results');box.hidden=false;$('#sv-res-body').innerHTML='<p class="muted">Loading results…</p>';let rows=null,where='from everyone who has answered';
+ if(sb){try{const{data,error}=await sb.rpc('survey_results');if(!error&&data)rows=data;}catch(e){}}
+ if(!rows){rows=svLocalRows();where='saved on this device (the server couldn\'t be reached)';}
+ svRows=rows;const total=+(rows.find(r=>r.question==='_total')?.responses||0);
+ $('#sv-res-sub').textContent=`${total} response${total===1?'':'s'} ${where}.`;
+ if(!total){$('#sv-res-body').innerHTML='<p class="muted">No responses yet. Results appear here as people answer.</p>';return;}
+ const get=id=>rows.filter(r=>r.question===id),bar=(label,pct,val)=>`<div class="rb"><span class="rl">${esc(label)}</span><span class="rt"><i style="width:${clamp(pct,0,100).toFixed(1)}%"></i></span><span class="num">${val}</span></div>`;
+ let n=0;$('#sv-res-body').innerHTML=SV_ITEMS.filter(it=>it.type!=='text').map(it=>{n++;const rs=get(it.id);let body='';
+  if(it.type==='matrix'){body=it.rows.map(r=>{let s=0,k=0;rs.forEach(x=>{const i=x.answer.lastIndexOf('=');if(x.answer.slice(0,i)===r){s+=(+x.answer.slice(i+1))*x.responses;k+=+x.responses;}});const av=k?s/k:0;return bar(r,av/5*100,k?av.toFixed(1)+' / 5':'–');}).join('');}
+  else if(it.type==='scale'){let s=0,k=0;rs.forEach(x=>{s+=(+x.answer)*x.responses;k+=+x.responses;});body=`<p class="small"><b class="num">${k?(s/k).toFixed(1):'–'}</b> <span class="muted">average out of 5</span></p>`+[5,4,3,2,1].map(v=>{const c=+(rs.find(x=>+x.answer===v)?.responses||0);return bar(v===5?'5 · '+it.hi:v===1?'1 · '+it.lo:String(v),k?c/k*100:0,c);}).join('');}
+  else{const base=it.type==='single'?rs.reduce((a,x)=>a+ +x.responses,0):total;body=it.opts.map(o=>{const c=+(rs.find(x=>x.answer===o)?.responses||0);return bar(o,base?c/base*100:0,`${c} · ${base?Math.round(c/base*100):0}%`);}).join('');}
+  return`<div class="rq"><h3><span class="qn">${n}</span>${esc(it.q)}</h3>${it.type==='multi'?'<p class="small muted">People could pick more than one, so percentages add up to more than 100%.</p>':''}${body}</div>`;}).join('')+'<p class="small muted">Written comments are private. They are not shown here.</p>';}
+$('#sv-show-res').addEventListener('click',svResults);$('#sv-res-btn').addEventListener('click',svResults);
+$('#sv-csv').addEventListener('click',async()=>{const q=id=>(SV_ITEMS.find(i=>i.id===id)||{q:id==='_total'?'Total responses':id}).q,c=v=>'"'+String(v).replace(/"/g,'""')+'"';
+ const t='question,answer,responses\n'+svRows.map(r=>[c(q(r.question)),c(r.answer),r.responses].join(',')).join('\n');
+ try{await navigator.clipboard.writeText(t);toast('Results copied as CSV');}catch(err){toast('Copy was blocked in this view');}});
+function svShow(){if(!svBuilt)svBuild();}
 
 /* ---------- REPORT ---------- */
 const STAT={proven:['good','Works'],partial:['warn','Partly'],not:['bad','Not in beta'],untested:['','Not tested yet']};
