@@ -212,6 +212,7 @@ input[type=date]{font:inherit;font-size:15px;color:var(--ink);background:var(--s
 #po-tips{margin:0;padding-left:18px;display:grid;gap:4px}
 @media (max-width:560px){.cbars{grid-template-columns:repeat(2,minmax(0,1fr))}.chord-name{font-size:3rem}}
 
+.lvlrow{display:flex;align-items:center;gap:8px;width:100%;max-width:360px}.lvl{flex:1;height:8px;border-radius:99px;background:var(--line);overflow:hidden}.lvl i{display:block;height:100%;width:0;background:var(--muted);border-radius:99px;transition:width .06s}.lvl i.on{background:var(--good)}
 /* rhythm */
 .pad{width:100%;min-height:150px;border-radius:16px;border:2px solid var(--line);background:var(--sunk);color:var(--ink);font:800 1.6rem var(--f-display);cursor:pointer;touch-action:manipulation;transition:transform .05s}
 .pad:active,.pad.hit{transform:scale(.985);border-color:var(--accent)}
@@ -456,7 +457,7 @@ textarea{width:100%;min-height:80px;font:inherit;color:var(--ink);background:var
       <p class="muted small" id="mic-intro">Play one note at a time. Modo shows the note it hears and how sharp or flat you are, in cents.</p>
       <div class="row"><button class="btn primary" id="mic-start" type="button">Use microphone</button><button class="btn" id="mic-stop" type="button" disabled>Stop</button></div>
       <p class="small" id="mic-msg" aria-live="polite"></p>
-      <div class="tuner sunk"><div class="note" id="tn-note">–</div><div class="meter"><div class="needle" id="tn-needle"></div></div><div class="num small muted" id="tn-detail">Waiting for sound</div><div class="small" id="tn-chord"></div></div>
+      <div class="tuner sunk"><div class="note" id="tn-note">–</div><div class="meter"><div class="needle" id="tn-needle"></div></div><div class="num small muted" id="tn-detail">Waiting for sound</div><div class="small" id="tn-chord"></div><div class="lvlrow"><span class="small muted">Input</span><div class="lvl" aria-hidden="true"><i id="tn-lvl"></i></div></div></div>
       <canvas id="tn-trace" height="140"></canvas>
     </div>
     <div class="panel">
@@ -1141,28 +1142,35 @@ $('#sg-stop').addEventListener('click',sgStop);
 function openSong(k,a,b,tempo){if(!songList().includes(k))return go('songs');$('#sg-song').value=k;sgSetup(k);if(a){$('#sg-from').value=a;$('#sg-to').value=b;}if(tempo){$('#sg-tempo').value=tempo;sgTempoL();}drawLane();go('songs');}
 
 /* ---------- PITCH DETECTION (YIN) ---------- */
-function yin(x,sr,tMin,tMax){const W=x.length-tMax;if(W<64)return -1;const d=new Float32Array(tMax+1);
+function yin(x,sr,tMin,tMax,th=.15){const W=x.length-tMax;if(W<64)return -1;const d=new Float32Array(tMax+1);
  for(let t=1;t<=tMax;t++){let s=0;for(let j=0;j<W;j++){const v=x[j]-x[j+t];s+=v*v;}d[t]=s;}
  d[0]=1;let run=0;for(let t=1;t<=tMax;t++){run+=d[t];d[t]=run?d[t]*t/run:1;}
- let tau=-1;for(let t=tMin;t<=tMax;t++){if(d[t]<.15){while(t+1<=tMax&&d[t+1]<d[t])t++;tau=t;break;}}
+ let tau=-1;for(let t=tMin;t<=tMax;t++){if(d[t]<th){while(t+1<=tMax&&d[t+1]<d[t])t++;tau=t;break;}}
  if(tau<0)return -1;const a=d[tau-1],b=d[tau],c=tau+1<=tMax?d[tau+1]:b,den=a-2*b+c;return sr/(tau+(den?(a-c)/(2*den):0));}
-function detect(buf,sr){const k=Math.max(1,Math.round(sr/22050)),n=Math.floor(buf.length/k),x=new Float32Array(n);
+function detect(buf,sr,th){const k=Math.max(1,Math.round(sr/22050)),n=Math.floor(buf.length/k),x=new Float32Array(n);
  for(let i=0;i<n;i++){let s=0;for(let j=0;j<k;j++)s+=buf[i*k+j];x[i]=s/k;}
- const srd=sr/k;return yin(x,srd,Math.max(2,Math.floor(srd/1200)),Math.min(Math.floor(srd/38),Math.floor(n/2)));}
+ const srd=sr/k;return yin(x,srd,Math.max(2,Math.floor(srd/1200)),Math.min(Math.floor(srd/38),Math.floor(n/2)),th);}
 
 /* ---------- LIVE MIC ---------- */
 let mic=null;const trace=[];
 async function micStart(){const c=ac();if(P().input==='drums')return drumLiveStart();
- if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){S.checks.mic={ok:false,why:'Not supported in this browser view'};save();$('#mic-msg').textContent='Microphone access isn\'t available in this view. Upload a recording instead, or open the downloaded beta file in Chrome.';return;}
- try{const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
-  const src=c.createMediaStreamSource(st),an=c.createAnalyser();an.fftSize=8192;an.smoothingTimeConstant=0;src.connect(an);mic={st,an,buf:new Float32Array(8192),db:new Float32Array(4096)};
-  S.checks.mic={ok:true};save();$('#mic-msg').textContent='Listening. Play a single note.';$('#mic-start').disabled=true;$('#mic-stop').disabled=false;micLoop();
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){S.checks.mic={ok:false,why:'Not supported in this browser view'};save();$('#mic-msg').textContent='Microphone access isn\'t available in this view. Open Modo from its website, or upload a recording below.';return;}
+ try{const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});
+  const src=c.createMediaStreamSource(st),an=c.createAnalyser();an.fftSize=8192;an.smoothingTimeConstant=0;src.connect(an);mic={st,an,buf:new Float32Array(8192),db:new Float32Array(4096),floor:null,quiet:0,heard:0};
+  S.checks.mic={ok:true};save();$('#mic-msg').textContent='Listening. Play a single note and let it ring. The Input bar shows how loudly Modo hears you.';$('#tn-detail').textContent='Waiting for sound';$('#mic-start').disabled=true;$('#mic-stop').disabled=false;micLoop();
  }catch(e){S.checks.mic={ok:false,why:e.name==='NotAllowedError'?'Blocked by the page or browser':e.name};save();
-  $('#mic-msg').textContent='The microphone was blocked here. Upload a recording below, or open the downloaded beta file in Chrome to test the live tuner.';}}
+  $('#mic-msg').textContent=e.name==='NotAllowedError'?'Modo isn\'t allowed to use the microphone. Allow it in your browser\'s site settings (the icon left of the address bar), then press Use microphone again. In this preview the microphone is always blocked, so open Modo from its website.':e.name==='NotFoundError'?'No microphone was found. Plug one in or check your sound settings, then try again.':'The microphone couldn\'t start ('+e.name+'). Close other apps using it and try again.';}}
 function micStop(){drumMicStop();if(!mic){$('#mic-start').disabled=false;$('#mic-stop').disabled=true;$('#mic-msg').textContent='Stopped.';return;}mic.st.getTracks().forEach(t=>t.stop());mic=null;$('#mic-start').disabled=false;$('#mic-stop').disabled=true;$('#mic-msg').textContent='Stopped.';}
 function micLoop(){if(!mic)return;mic.an.getFloatTimeDomainData(mic.buf);let r=0;for(const v of mic.buf)r+=v*v;r=Math.sqrt(r/mic.buf.length);
- const f=r>.01?detect(mic.buf.subarray(4096),ctx.sampleRate):-1;
- if(chordOK()){let t='';if(r>.01){mic.an.getFloatFrequencyData(mic.db);const b=bestChord(chromaFromMag(Float32Array.from(mic.db,v=>Math.pow(10,v/20)),ctx.sampleRate,8192));if(b&&b.score>.82)t='Chord: '+chordLabel(b.sym);}$('#tn-chord').textContent=t;}
+ mic.floor=mic.floor==null?r:r<mic.floor?r:mic.floor+(r-mic.floor)*.002;const gate=Math.max(.0025,mic.floor*3),loud=r>gate;
+ $('#tn-lvl').style.width=clamp((20*Math.log10(r+1e-9)+60)/50*100,0,100)+'%';$('#tn-lvl').classList.toggle('on',loud);
+ let f=loud?detect(mic.buf.subarray(4096),ctx.sampleRate,.22):-1;mic.quiet=loud?0:mic.quiet+1;
+ if(f>0){mic.an.getFloatFrequencyData(mic.db);const sr=ctx.sampleRate,amp=k=>{const c=Math.round(k*f*8192/sr);let m=-Infinity;for(let i=c-2;i<=c+2;i++)if(i>0&&i<mic.db.length)m=Math.max(m,mic.db[i]);return m;},A=[0,1,2,3,4,5,6].map(k=>k?amp(k):-Infinity),M=Math.max(...A);
+  if(A[1]<M-28){const k=[2,3,4].find(k=>A[k]>=M-6);if(k)f*=k;}mic.heard=performance.now();}
+ $('#tn-note').style.opacity=performance.now()-mic.heard>2000?.35:1;
+ if(loud&&f<=0&&performance.now()-mic.heard>600)$('#tn-detail').textContent='Hearing sound, but no clear single note yet. Play one note and let it ring.';
+ else if(!loud&&mic.quiet>300&&performance.now()-mic.heard>5000)$('#tn-detail').textContent=r<.0005?'Very quiet. Check the right microphone is selected, or move closer to it.':'Waiting for sound';
+ if(chordOK()){let t='';if(loud){mic.an.getFloatFrequencyData(mic.db);const b=bestChord(chromaFromMag(Float32Array.from(mic.db,v=>Math.pow(10,v/20)),ctx.sampleRate,8192));if(b&&b.score>.82)t='Chord: '+chordLabel(b.sym);}$('#tn-chord').textContent=t;}
  if(f>0){const m=ftom(f),near=Math.round(m),cents=Math.round((m-near)*100);$('#tn-note').textContent=nn(near);$('#tn-needle').style.left=`calc(${50+clamp(cents,-50,50)}% - 2px)`;$('#tn-detail').textContent=`${f.toFixed(1)} Hz · ${cents>0?'+':''}${cents} cents ${Math.abs(cents)<=12?'· in tune':cents>0?'· sharp':'· flat'}`;trace.push(m);}else trace.push(null);
  if(trace.length>300)trace.shift();drawTrace();requestAnimationFrame(micLoop);}
 function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
@@ -1313,7 +1321,7 @@ async function chMicOpen(){if(chMic)return chMic;const c=ac();if(!navigator.medi
  const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
  const src=c.createMediaStreamSource(st),an=c.createAnalyser();an.fftSize=8192;an.smoothingTimeConstant=0;src.connect(an);chMic={st,an,db:new Float32Array(4096),td:new Float32Array(8192),ema:null};S.checks.mic={ok:true};save();return chMic;}
 function chMicClose(){if(!chMic)return;chMic.st.getTracks().forEach(t=>t.stop());chMic=null;}
-function chMicFrame(){const m=chMic;m.an.getFloatTimeDomainData(m.td);let r=0;for(const v of m.td)r+=v*v;r=Math.sqrt(r/m.td.length);if(r<.008)return{quiet:true};
+function chMicFrame(){const m=chMic;m.an.getFloatTimeDomainData(m.td);let r=0;for(const v of m.td)r+=v*v;r=Math.sqrt(r/m.td.length);if(r<.003)return{quiet:true};
  m.an.getFloatFrequencyData(m.db);const mag=Float32Array.from(m.db,v=>Math.pow(10,v/20)),ch=chromaFromMag(mag,ctx.sampleRate,8192);if(!ch)return{quiet:true};
  m.ema=m.ema?m.ema.map((v,i)=>v*.5+ch[i]*.5):ch;return{ch:m.ema};}
 function drawChroma(ch,target){const {g,w,h}=fitCanvas($('#ch-chroma'));g.clearRect(0,0,w,h);const want=target?new Set(chordPcs(target)):new Set(),bw=w/12;g.font='11px '+css('--f-mono');g.textAlign='center';
